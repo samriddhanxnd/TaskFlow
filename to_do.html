@@ -1,0 +1,492 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Daily Task Manager</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        brand: {
+                            50: '#f0fdf4',
+                            100: '#dcfce7',
+                            500: '#22c55e',
+                            600: '#16a34a',
+                            700: '#15803d',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <!-- FontAwesome for Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Fonts Inter -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 4px;
+        }
+        .dark ::-webkit-scrollbar-thumb {
+            background: #475569;
+        }
+    </style>
+</head>
+<body class="bg-slate-50 dark:bg-slate-950 text-slate-800 dark:text-slate-100 min-h-screen transition-colors duration-300 flex flex-col justify-between">
+
+    <!-- Header / Navigation -->
+    <header class="sticky top-0 z-30 bg-white/80 dark:bg-slate-900/80 backdrop-blur-md border-b border-slate-200 dark:border-slate-800 shadow-sm">
+        <div class="max-w-4xl mx-auto px-4 py-4 flex items-center justify-between">
+            <div class="flex items-center space-x-3">
+                <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-green-500 to-emerald-400 flex items-center justify-center text-white shadow-md shadow-green-500/20">
+                    <i class="fa-solid fa-check-double text-lg"></i>
+                </div>
+                <div>
+                    <h1 class="text-xl font-bold tracking-tight bg-gradient-to-r from-green-600 to-emerald-500 bg-clip-text text-transparent">TaskFlow</h1>
+                    <p class="text-xs text-slate-500 dark:text-slate-400" id="current-date">Today</p>
+                </div>
+            </div>
+
+            <div class="flex items-center space-x-3">
+                <!-- Theme Toggle Button -->
+                <button id="theme-toggle" class="p-2.5 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700 transition-all focus:outline-none focus:ring-2 focus:ring-green-500" aria-label="Toggle Dark Mode">
+                    <i id="theme-icon" class="fa-solid fa-moon text-base"></i>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Container -->
+    <main class="max-w-4xl w-full mx-auto px-4 py-6 flex-grow space-y-6">
+
+        <!-- Stats Overview Card -->
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+            <div class="bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800/80 rounded-2xl p-4 shadow-sm flex items-center space-x-4">
+                <div class="w-12 h-12 rounded-xl bg-blue-50 dark:bg-blue-950/50 text-blue-600 dark:text-blue-400 flex items-center justify-center text-xl font-semibold">
+                    <i class="fa-solid fa-list-check"></i>
+                </div>
+                <div>
+                    <p class="text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">Total Tasks</p>
+                    <h3 id="stat-total" class="text-2xl font-bold mt-0.5">0</h3>
+                </div>
+            </div>
+
+            <div class="bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800/80 rounded-2xl p-4 shadow-sm flex items-center space-x-4">
+                <div class="w-12 h-12 rounded-xl bg-amber-50 dark:bg-amber-950/50 text-amber-600 dark:text-amber-400 flex items-center justify-center text-xl font-semibold">
+                    <i class="fa-solid fa-hourglass-half"></i>
+                </div>
+                <div>
+                    <p class="text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">Active</p>
+                    <h3 id="stat-active" class="text-2xl font-bold mt-0.5">0</h3>
+                </div>
+            </div>
+
+            <div class="bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800/80 rounded-2xl p-4 shadow-sm flex items-center space-x-4">
+                <div class="w-12 h-12 rounded-xl bg-green-50 dark:bg-green-950/50 text-green-600 dark:text-green-400 flex items-center justify-center text-xl font-semibold">
+                    <i class="fa-solid fa-circle-check"></i>
+                </div>
+                <div>
+                    <p class="text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">Completed</p>
+                    <h3 id="stat-completed" class="text-2xl font-bold mt-0.5">0</h3>
+                </div>
+            </div>
+        </div>
+
+        <!-- Progress Bar -->
+        <div class="bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800/80 rounded-2xl p-4 shadow-sm space-y-2">
+            <div class="flex justify-between items-center text-sm font-medium">
+                <span class="text-slate-600 dark:text-slate-300">Daily Progress</span>
+                <span id="progress-percentage" class="text-green-600 dark:text-green-400 font-semibold">0%</span>
+            </div>
+            <div class="w-full bg-slate-100 dark:bg-slate-800 h-3 rounded-full overflow-hidden">
+                <div id="progress-bar" class="bg-gradient-to-r from-green-500 to-emerald-400 h-full w-0 transition-all duration-500 rounded-full"></div>
+            </div>
+        </div>
+
+        <!-- ALWAYS AVAILABLE ADD TASK FORM -->
+        <div class="bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800/80 rounded-2xl p-5 shadow-sm space-y-4">
+            <div class="flex items-center space-x-2">
+                <div class="w-7 h-7 rounded-lg bg-green-100 dark:bg-green-900/50 text-green-600 dark:text-green-400 flex items-center justify-center text-sm">
+                    <i class="fa-solid fa-plus"></i>
+                </div>
+                <h2 class="font-semibold text-base">Add New Task</h2>
+            </div>
+            <form id="task-form" class="space-y-3">
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
+                    <div class="md:col-span-2">
+                        <input type="text" id="task-title" placeholder="What needs to be done? *..." required
+                            class="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/50 focus:outline-none focus:ring-2 focus:ring-green-500 text-sm transition-all">
+                    </div>
+                    <div>
+                        <select id="task-priority"
+                            class="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/50 focus:outline-none focus:ring-2 focus:ring-green-500 text-sm transition-all">
+                            <option value="low">🟢 Low Priority</option>
+                            <option value="medium" selected>🟡 Medium Priority</option>
+                            <option value="high">🔴 High Priority</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="flex flex-col sm:flex-row items-center justify-between gap-3">
+                    <div class="w-full sm:w-auto flex items-center space-x-2">
+                        <label for="task-date" class="text-xs text-slate-500 dark:text-slate-400 font-medium">Due Date:</label>
+                        <input type="date" id="task-date"
+                            class="px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/50 focus:outline-none focus:ring-2 focus:ring-green-500 text-xs transition-all">
+                    </div>
+                    <button type="submit"
+                        class="w-full sm:w-auto px-6 py-3 bg-green-600 hover:bg-green-700 text-white font-medium text-sm rounded-xl shadow-md shadow-green-600/20 transition-all flex items-center justify-center space-x-2">
+                        <i class="fa-solid fa-plus"></i>
+                        <span>Add Task</span>
+                    </button>
+                </div>
+            </form>
+        </div>
+
+        <!-- Search and Filter Bar -->
+        <div class="flex flex-col sm:flex-row items-center justify-between gap-4">
+            <!-- Filter Tabs -->
+            <div class="flex items-center space-x-1 bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800/80 p-1 rounded-2xl shadow-sm w-full sm:w-auto">
+                <button data-filter="all" class="filter-btn flex-1 sm:flex-initial px-4 py-2 text-xs font-semibold rounded-xl bg-green-600 text-white transition-all">All</button>
+                <button data-filter="active" class="filter-btn flex-1 sm:flex-initial px-4 py-2 text-xs font-semibold rounded-xl text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 transition-all">Active</button>
+                <button data-filter="completed" class="filter-btn flex-1 sm:flex-initial px-4 py-2 text-xs font-semibold rounded-xl text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 transition-all">Completed</button>
+            </div>
+
+            <!-- Search Input -->
+            <div class="relative w-full sm:w-72">
+                <span class="absolute inset-y-0 left-0 flex items-center pl-3.5 text-slate-400">
+                    <i class="fa-solid fa-magnifying-glass text-xs"></i>
+                </span>
+                <input type="text" id="search-input" placeholder="Search tasks..."
+                    class="w-full pl-10 pr-4 py-2.5 rounded-2xl border border-slate-200/80 dark:border-slate-800/80 bg-white dark:bg-slate-900 focus:outline-none focus:ring-2 focus:ring-green-500 text-xs shadow-sm transition-all">
+            </div>
+        </div>
+
+        <!-- Tasks List Section -->
+        <div class="space-y-3" id="tasks-container">
+            <!-- Tasks will be rendered dynamically here -->
+        </div>
+
+        <!-- Empty State -->
+        <div id="empty-state" class="hidden flex-col items-center justify-center py-12 px-4 text-center bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800/80 rounded-2xl shadow-sm space-y-3">
+            <div class="w-16 h-16 rounded-2xl bg-slate-100 dark:bg-slate-800 text-slate-400 flex items-center justify-center text-2xl">
+                <i class="fa-solid fa-clipboard-list"></i>
+            </div>
+            <h3 class="font-semibold text-base">No tasks found</h3>
+            <p class="text-xs text-slate-500 dark:text-slate-400 max-w-sm">Get started by creating a new task above or try adjusting your search/filter settings.</p>
+        </div>
+
+    </main>
+
+    <!-- Footer -->
+    <footer class="mt-12 py-6 border-t border-slate-200 dark:border-slate-800 text-center text-xs text-slate-500 dark:text-slate-400">
+        <p>&copy; TaskFlow. All rights reserved. Built with HTML, Tailwind CSS & Vanilla JavaScript.</p>
+    </footer>
+
+    <!-- Edit Task Modal -->
+    <div id="edit-modal" class="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 backdrop-blur-sm hidden px-4">
+        <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-6 w-full max-w-md shadow-2xl space-y-4">
+            <div class="flex items-center justify-between">
+                <h3 class="font-bold text-lg">Edit Task</h3>
+                <button id="close-modal" class="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 transition-colors">
+                    <i class="fa-solid fa-xmark text-lg"></i>
+                </button>
+            </div>
+            <form id="edit-form" class="space-y-4">
+                <input type="hidden" id="edit-id">
+                <div class="space-y-1">
+                    <label class="text-xs font-medium text-slate-500 dark:text-slate-400">Task Title *</label>
+                    <input type="text" id="edit-title" required
+                        class="w-full px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 focus:outline-none focus:ring-2 focus:ring-green-500 text-sm">
+                </div>
+                <div class="grid grid-cols-2 gap-3">
+                    <div class="space-y-1">
+                        <label class="text-xs font-medium text-slate-500 dark:text-slate-400">Priority</label>
+                        <select id="edit-priority"
+                            class="w-full px-3 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 focus:outline-none focus:ring-2 focus:ring-green-500 text-sm">
+                            <option value="low">🟢 Low</option>
+                            <option value="medium">🟡 Medium</option>
+                            <option value="high">🔴 High</option>
+                        </select>
+                    </div>
+                    <div class="space-y-1">
+                        <label class="text-xs font-medium text-slate-500 dark:text-slate-400">Due Date</label>
+                        <input type="date" id="edit-date"
+                            class="w-full px-3 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 focus:outline-none focus:ring-2 focus:ring-green-500 text-sm">
+                    </div>
+                </div>
+                <div class="flex justify-end space-x-3 pt-2">
+                    <button type="button" id="cancel-edit"
+                        class="px-4 py-2.5 text-sm font-medium rounded-xl border border-slate-200 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-800 transition-all">Cancel</button>
+                    <button type="submit"
+                        class="px-5 py-2.5 bg-green-600 hover:bg-green-700 text-white font-medium text-sm rounded-xl shadow-md shadow-green-600/20 transition-all">Save Changes</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- JavaScript Logic -->
+    <script>
+        let tasks = JSON.parse(localStorage.getItem('taskflow_tasks')) || [
+            { id: '1', title: 'Review morning emails and project updates', completed: false, priority: 'high', dueDate: new Date().toISOString().split('T')[0] },
+            { id: '2', title: 'Gym workout session', completed: true, priority: 'medium', dueDate: new Date().toISOString().split('T')[0] }
+        ];
+
+        let currentFilter = 'all';
+        let searchQuery = '';
+
+        const taskForm = document.getElementById('task-form');
+        const taskTitleInput = document.getElementById('task-title');
+        const taskPriorityInput = document.getElementById('task-priority');
+        const taskDateInput = document.getElementById('task-date');
+        const tasksContainer = document.getElementById('tasks-container');
+        const emptyState = document.getElementById('empty-state');
+        const searchInput = document.getElementById('search-input');
+        const filterBtns = document.querySelectorAll('.filter-btn');
+
+        const statTotal = document.getElementById('stat-total');
+        const statActive = document.getElementById('stat-active');
+        const statCompleted = document.getElementById('stat-completed');
+        const progressBar = document.getElementById('progress-bar');
+        const progressPercentage = document.getElementById('progress-percentage');
+        const currentDateEl = document.getElementById('current-date');
+
+        const themeToggleBtn = document.getElementById('theme-toggle');
+        const themeIcon = document.getElementById('theme-icon');
+
+        const editModal = document.getElementById('edit-modal');
+        const editForm = document.getElementById('edit-form');
+        const editIdInput = document.getElementById('edit-id');
+        const editTitleInput = document.getElementById('edit-title');
+        const editPriorityInput = document.getElementById('edit-priority');
+        const editDateInput = document.getElementById('edit-date');
+        const closeModalBtn = document.getElementById('close-modal');
+        const cancelEditBtn = document.getElementById('cancel-edit');
+
+        function initDate() {
+            const options = { weekday: 'long', year: 'numeric', month: 'short', day: 'numeric' };
+            currentDateEl.textContent = new Date().toLocaleDateString('en-US', options);
+        }
+
+        function initTheme() {
+            const savedTheme = localStorage.getItem('taskflow_theme');
+            if (savedTheme === 'dark' || (!savedTheme && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+                document.documentElement.classList.add('dark');
+                themeIcon.className = 'fa-solid fa-sun text-base';
+            } else {
+                document.documentElement.classList.remove('dark');
+                themeIcon.className = 'fa-solid fa-moon text-base';
+            }
+        }
+
+        themeToggleBtn.addEventListener('click', () => {
+            if (document.documentElement.classList.contains('dark')) {
+                document.documentElement.classList.remove('dark');
+                localStorage.setItem('taskflow_theme', 'light');
+                themeIcon.className = 'fa-solid fa-moon text-base';
+            } else {
+                document.documentElement.classList.add('dark');
+                localStorage.setItem('taskflow_theme', 'dark');
+                themeIcon.className = 'fa-solid fa-sun text-base';
+            }
+        });
+
+        function saveTasks() {
+            localStorage.setItem('taskflow_tasks', JSON.stringify(tasks));
+            renderTasks();
+            updateStats();
+        }
+
+        taskForm.addEventListener('submit', (e) => {
+            e.preventDefault();
+            const title = taskTitleInput.value.trim();
+            if (!title) return;
+
+            const newTask = {
+                id: Date.now().toString(),
+                title: title,
+                completed: false,
+                priority: taskPriorityInput.value,
+                dueDate: taskDateInput.value || new Date().toISOString().split('T')[0]
+            };
+
+            tasks.unshift(newTask);
+            taskForm.reset();
+            taskPriorityInput.value = 'medium';
+            saveTasks();
+        });
+
+        window.toggleTask = function(id) {
+            tasks = tasks.map(task => task.id === id ? { ...task, completed: !task.completed } : task);
+            saveTasks();
+        };
+
+        window.deleteTask = function(id) {
+            tasks = tasks.filter(task => task.id !== id);
+            saveTasks();
+        };
+
+        window.openEditModal = function(id) {
+            const task = tasks.find(t => t.id === id);
+            if (!task) return;
+
+            editIdInput.value = task.id;
+            editTitleInput.value = task.title;
+            editPriorityInput.value = task.priority;
+            editDateInput.value = task.dueDate || '';
+
+            editModal.classList.remove('hidden');
+        };
+
+        function closeEditModal() {
+            editModal.classList.add('hidden');
+        }
+
+        closeModalBtn.addEventListener('click', closeEditModal);
+        cancelEditBtn.addEventListener('click', closeEditModal);
+        editModal.addEventListener('click', (e) => {
+            if (e.target === editModal) closeEditModal();
+        });
+
+        editForm.addEventListener('submit', (e) => {
+            e.preventDefault();
+            const id = editIdInput.value;
+            const title = editTitleInput.value.trim();
+            if (!title) return;
+
+            tasks = tasks.map(task => {
+                if (task.id === id) {
+                    return {
+                        ...task,
+                        title: title,
+                        priority: editPriorityInput.value,
+                        dueDate: editDateInput.value
+                    };
+                }
+                return task;
+            });
+
+            closeEditModal();
+            saveTasks();
+        });
+
+        filterBtns.forEach(btn => {
+            btn.addEventListener('click', () => {
+                filterBtns.forEach(b => {
+                    b.classList.remove('bg-green-600', 'text-white');
+                    b.classList.add('text-slate-600', 'dark:text-slate-400', 'hover:bg-slate-100', 'dark:hover:bg-slate-800');
+                });
+                btn.classList.add('bg-green-600', 'text-white');
+                btn.classList.remove('text-slate-600', 'dark:text-slate-400', 'hover:bg-slate-100', 'dark:hover:bg-slate-800');
+
+                currentFilter = btn.getAttribute('data-filter');
+                renderTasks();
+            });
+        });
+
+        searchInput.addEventListener('input', (e) => {
+            searchQuery = e.target.value.toLowerCase().trim();
+            renderTasks();
+        });
+
+        function updateStats() {
+            const total = tasks.length;
+            const completed = tasks.filter(t => t.completed).length;
+            const active = total - completed;
+            const percentage = total > 0 ? Math.round((completed / total) * 100) : 0;
+
+            statTotal.textContent = total;
+            statActive.textContent = active;
+            statCompleted.textContent = completed;
+
+            progressBar.style.width = `${percentage}%`;
+            progressPercentage.textContent = `${percentage}%`;
+        }
+
+        function renderTasks() {
+            let filtered = tasks.filter(task => {
+                const matchesSearch = task.title.toLowerCase().includes(searchQuery);
+                if (currentFilter === 'active') return !task.completed && matchesSearch;
+                if (currentFilter === 'completed') return task.completed && matchesSearch;
+                return matchesSearch;
+            });
+
+            if (filtered.length === 0) {
+                tasksContainer.innerHTML = '';
+                emptyState.classList.remove('hidden');
+                emptyState.classList.add('flex');
+                return;
+            }
+
+            emptyState.classList.remove('flex');
+            emptyState.classList.add('hidden');
+
+            tasksContainer.innerHTML = filtered.map(task => {
+                let priorityBadge = '';
+                if (task.priority === 'high') {
+                    priorityBadge = `<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-50 dark:bg-red-950/50 text-red-600 dark:text-red-400 border border-red-200/50 dark:border-red-900/50"><span class="w-1.5 h-1.5 rounded-full bg-red-500 mr-1.5"></span>High</span>`;
+                } else if (task.priority === 'medium') {
+                    priorityBadge = `<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-amber-50 dark:bg-amber-950/50 text-amber-600 dark:text-amber-400 border border-amber-200/50 dark:border-amber-900/50"><span class="w-1.5 h-1.5 rounded-full bg-amber-500 mr-1.5"></span>Medium</span>`;
+                } else {
+                    priorityBadge = `<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-50 dark:bg-blue-950/50 text-blue-600 dark:text-blue-400 border border-blue-200/50 dark:border-blue-900/50"><span class="w-1.5 h-1.5 rounded-full bg-blue-500 mr-1.5"></span>Low</span>`;
+                }
+
+                let dateFormatted = '';
+                if (task.dueDate) {
+                    const dateObj = new Date(task.dueDate + 'T00:00:00');
+                    dateFormatted = `<span class="inline-flex items-center text-xs text-slate-400"><i class="fa-regular fa-calendar mr-1.5"></i>${dateObj.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}</span>`;
+                }
+
+                return `
+                    <div class="group bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800/80 rounded-2xl p-4 shadow-sm hover:shadow-md transition-all flex items-center justify-between gap-4">
+                        <div class="flex items-center space-x-3.5 min-w-0 flex-grow">
+                            <button onclick="toggleTask('${task.id}')" class="flex-shrink-0 w-6 h-6 rounded-lg border-2 ${task.completed ? 'bg-green-600 border-green-600 text-white' : 'border-slate-300 dark:border-slate-600 hover:border-green-500'} flex items-center justify-center transition-all focus:outline-none">
+                                ${task.completed ? '<i class="fa-solid fa-check text-xs"></i>' : ''}
+                            </button>
+                            <div class="min-w-0 flex-grow space-y-1">
+                                <h4 class="text-sm font-medium ${task.completed ? 'line-through text-slate-400 dark:text-slate-500' : 'text-slate-800 dark:text-slate-100'} truncate">${escapeHTML(task.title)}</h4>
+                                <div class="flex items-center space-x-3 flex-wrap gap-y-1">
+                                    ${priorityBadge}
+                                    ${dateFormatted}
+                                </div>
+                            </div>
+                        </div>
+                        <div class="flex items-center space-x-1 opacity-0 group-hover:opacity-100 transition-opacity flex-shrink-0">
+                            <button onclick="openEditModal('${task.id}')" class="p-2 text-slate-400 hover:text-blue-600 dark:hover:text-blue-400 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 transition-all" title="Edit Task">
+                                <i class="fa-solid fa-pen text-xs"></i>
+                            </button>
+                            <button onclick="deleteTask('${task.id}')" class="p-2 text-slate-400 hover:text-red-600 dark:hover:text-red-400 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 transition-all" title="Delete Task">
+                                <i class="fa-solid fa-trash text-xs"></i>
+                            </button>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function escapeHTML(str) {
+            return str.replace(/[&<>'"]/g, 
+                tag => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;' }[tag] || tag)
+            );
+        }
+
+        initDate();
+        initTheme();
+        updateStats();
+        renderTasks();
+    </script>
+</body>
+</html>
